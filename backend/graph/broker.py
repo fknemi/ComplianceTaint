@@ -12,7 +12,6 @@ summary (e.g. publishTransaction, syncConfigToRedis) so the builder can
 wire a function-level source node rather than a file-level one.
 """
 
-
 import re
 import logging
 from typing import Dict, List, Set, Tuple, Any, Optional
@@ -58,6 +57,7 @@ _CONSUME_PATTERNS: List[str] = [
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_file_summary(
     project_id: str,
     path: str,
@@ -84,6 +84,7 @@ def _extract_function_topic_pairs(
             if func and topic and "." in topic:
                 found.append((func, topic))
     return found
+
 
 def _resolve_flow_type(
     topic: str, kafka_topics: Set[str], redis_channels: Set[str]
@@ -129,6 +130,7 @@ def _extract_broker_topics_from_configs(
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def derive_implicit_edges(
     project_id: str,
     branch: str,
@@ -154,7 +156,8 @@ def derive_implicit_edges(
 
     # Skip config files, test files, shared infrastructure
     service_files = [
-        p for p in file_paths
+        p
+        for p in file_paths
         if not p.startswith("config/")
         and not p.startswith("tests/")
         and not p.startswith("services/shared/")
@@ -186,16 +189,22 @@ def derive_implicit_edges(
         for src_file, src_func in publishers.get(topic, []):
             for dst_file, _dst_func in subscribers.get(topic, []):
                 if src_file != dst_file:
-                    edges.append({
-                        "src_file":       src_file,
-                        "src_func":       src_func or None,
-                        "dst":            dst_file,
-                        "data_flow_type": flow_type,
-                        "topic":          topic,
-                    })
+                    edges.append(
+                        {
+                            "src_file": src_file,
+                            "src_func": src_func or None,
+                            "dst": dst_file,
+                            "data_flow_type": flow_type,
+                            "topic": topic,
+                        }
+                    )
                     logger.info(
                         "Derived implicit edge: %s::%s -> %s [%s] via %s",
-                        src_file, src_func, dst_file, flow_type, topic,
+                        src_file,
+                        src_func,
+                        dst_file,
+                        flow_type,
+                        topic,
                     )
 
     return edges

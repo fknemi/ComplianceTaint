@@ -21,7 +21,7 @@ class SanitizeResponse(BaseModel):
     message: Optional[str] = None
 
 
-@router.post("/graph/nodes/sanitize", response_model=SanitizeResponse)
+@router.post("", response_model=SanitizeResponse)
 def apply_sanitizer(
     nodeId: str = Query(
         ...,
@@ -37,12 +37,13 @@ def apply_sanitizer(
     Suggest or apply a sanitizer for a given graph node.
     The node ID is passed as a query parameter to support slashes in file paths.
     """
+    api_key = apiKey if apiKey not in (None, "undefined", "null", "") else None
     try:
         graph, _ = build_and_analyze_graph(
             project_id=projectId,
             branch=branch,
             commit_id=commitId,
-            api_key=apiKey,
+            api_key=api_key,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

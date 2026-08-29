@@ -23,6 +23,8 @@ def get_graph(
     Retrieve the graph elements for a project.
     All query parameters are in camelCase.
     """
+    if apiKey in (None, "undefined", "null", ""):
+        apiKey = None
     try:
         graph, _ = build_and_analyze_graph(
             project_id=projectId,

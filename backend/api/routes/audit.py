@@ -36,7 +36,8 @@ def run_audit(request: AuditRequest):
     """
     Execute the compliance taint analysis and return all detected violations.
     """
-
+    if request.apiKey in (None, "undefined", "null", ""):
+        request.apiKey = None
     try:
         _, violations = build_and_analyze_graph(
             project_id=request.projectId,

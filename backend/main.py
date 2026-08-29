@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from api.routes import graph, audit, sanitizer
+from api.routes import graph, audit, sanitize
 import uvicorn
 
 logging.basicConfig(level=logging.INFO)
@@ -57,7 +57,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(graph.router, prefix="/api/v1/graph", tags=["Graph"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Audit"])
 app.include_router(audit.router, prefix="/api/v1/commit_id", tags=["Audit"])
-app.include_router(sanitizer.router, prefix="/api/v1/sanitizer", tags=["Sanitizer"])
+app.include_router(sanitize.router, prefix="/api/v1/sanitize", tags=["Sanitizer"])
 
 
 @app.get("/health", tags=["System"])

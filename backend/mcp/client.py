@@ -454,7 +454,7 @@ def get_file_index_snapshots_state(
         client.close()
 
 
-def get_commit_id(
+def fetch_commit_id(
     project_id: str,
     commit_id: str,
     api_key: Optional[str] = None,
