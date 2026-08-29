@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import time
@@ -55,6 +56,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 app.include_router(graph.router, prefix="/api/v1/graph", tags=["Graph"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Audit"])
+app.include_router(audit.router, prefix="/api/v1/commit_id", tags=["Audit"])
 app.include_router(sanitizer.router, prefix="/api/v1/sanitizer", tags=["Sanitizer"])
 
 

@@ -452,3 +452,39 @@ def get_file_index_snapshots_state(
 
     finally:
         client.close()
+
+
+def get_commit_id(
+    project_id: str,
+    commit_id: str,
+    api_key: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Get the commit ID from the state-at endpoint from Latent Graph API.
+
+    Args:
+        project_id: UUID of the project
+        commit_id: Git commit hash (or branch reference)
+        api_key: Optional API key for authentication
+
+    Returns:
+        The commit_id from the response body, or None if not found
+    """
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
+
+    try:
+        params = {"collection": "codewiki_docs"}
+
+        response = client.get(
+            f"/api/projects/{project_id}/state-at/{commit_id}",
+            params=params,
+        )
+
+        # Extract and return only body.commit_id if the response is a dictionary
+        if isinstance(response, dict) and "body" in response:
+            return response["body"].get("commit_id")
+
+        return None
+
+    finally:
+        client.close()

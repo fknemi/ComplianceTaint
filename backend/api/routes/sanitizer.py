@@ -1,66 +1,67 @@
 import logging
 from typing import Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-
-from api.helpers import build_and_analyze_graph, get_api_key
+from api.helpers import build_and_analyze_graph
 from engine.taint import SANITIZER_CAPABILITIES
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
 
 
 class SanitizeRequest(BaseModel):
-    sanitizer_type: str
+    sanitizerType: str
 
 
 class SanitizeResponse(BaseModel):
     status: str
     node: str
     role: str
-    recommended_sanitizer: Optional[str] = None
+    recommendedSanitizer: Optional[str] = None
     message: Optional[str] = None
 
 
 @router.post("/graph/nodes/sanitize", response_model=SanitizeResponse)
 def apply_sanitizer(
-    node_id: str = Query(
+    nodeId: str = Query(
         ...,
         description="Node identifier (e.g., 'services/payment-service/paymentService.js::syncConfigToRedis')",
     ),
-    request: SanitizeRequest = None,
-    project_id: str = Query(..., description="Project UUID"),
+    request: Optional[SanitizeRequest] = None,
+    projectId: str = Query(..., description="Project UUID"),
     branch: str = Query("main"),
-    commit_id: Optional[str] = Query(None),
-    api_key: str = Depends(get_api_key),
+    commitId: Optional[str] = Query(None),
+    apiKey: Optional[str] = Query(None, description="API key"),
 ):
     """
     Suggest or apply a sanitizer for a given graph node.
-    The node_id is passed as a query parameter to support slashes in file paths.
+    The node ID is passed as a query parameter to support slashes in file paths.
     """
     try:
-        graph, _ = build_and_analyze_graph(project_id, branch, commit_id, api_key)
+        graph, _ = build_and_analyze_graph(
+            project_id=projectId,
+            branch=branch,
+            commit_id=commitId,
+            api_key=apiKey,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
-    except Exception as e:
+    except Exception:
         logger.exception("Sanitizer endpoint failed")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-    if node_id not in graph:
-        # Suggest similar nodes
+    if nodeId not in graph:
         similar = [
-            n for n in graph.nodes if node_id.split("::")[-1].lower() in n.lower()
+            n for n in graph.nodes if nodeId.split("::")[-1].lower() in n.lower()
         ][:5]
-        detail = f"Node '{node_id}' not found."
+        detail = f"Node '{nodeId}' not found."
         if similar:
             detail += f" Did you mean one of these? {similar}"
         raise HTTPException(status_code=404, detail=detail)
 
-    attrs = graph.nodes[node_id]
+    attrs = graph.nodes[nodeId]
     role = attrs.get("role", "normal")
     taint_types = attrs.get("taint_types", [])
 
@@ -71,9 +72,9 @@ def apply_sanitizer(
                 recommended = pattern.pattern
                 break
 
-    provided = request.sanitizer_type if request else None
+    provided = request.sanitizerType if request else None
     if provided:
-        message = f"Sanitizer '{provided}' accepted for node '{node_id}'."
+        message = f"Sanitizer '{provided}' accepted for node '{nodeId}'."
         status = "success"
     else:
         message = recommended or "No sanitizer required for this node."
@@ -81,8 +82,8 @@ def apply_sanitizer(
 
     return SanitizeResponse(
         status=status,
-        node=node_id,
+        node=nodeId,
         role=role,
-        recommended_sanitizer=recommended,
+        recommendedSanitizer=recommended,
         message=message,
     )
