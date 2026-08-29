@@ -1,0 +1,70 @@
+rules:
+  - id: "RULE_001"
+    name: "PII Logging Violation"
+    description: "Any data originating from a PII Source node must not reach a Log Sink node without passing through a Sanitizer node."
+    
+    pattern:
+      source:
+        type: "tag"
+        value: "pii"
+      sink:
+        type: "tag"
+        value: "log"
+      sanitizer:
+        required: true
+        type: "tag"
+        value: "sanitizer"
+    
+    metadata:
+      severity: "High"
+      category: "data-leakage"
+      regulatory_citation: 
+        - "GDPR Article 5(1)(f)"
+        - "ISO 27001 A.18.1.3"
+      fix_suggestion: "Apply a masking or redaction utility before logging"
+      false_positive_notes: "Manual review required for test environments"
+
+  - id: "RULE_002"
+    name: "Cross-Zone Data Leakage"
+    description: "PCI-zone data must not reach non-PCI zones"
+    
+    pattern:
+      source:
+        type: "zone"
+        value: "pci"
+      sink:
+        type: "zone"
+        value: ["public", "gdpr", "rbi"]  
+        forbidden: true
+      edges:
+        include_implicit: true
+    
+    metadata:
+      severity: "Critical"
+      category: "network-segmentation"
+      regulatory_citation:
+        - "PCI DSS v4.0 Req 1.2.1"
+        - "RBI Master Direction"
+      fix_suggestion: "Implement tokenization at PCI boundary"
+
+  - id: "RULE_003"
+    name: "Secret Exposure via Implicit Channels"
+    description: "Secrets must not flow through implicit edges across service boundaries"
+    
+    pattern:
+      source:
+        type: "tag"
+        value: "secret"
+      path:
+        edge_types: ["implicit"]
+        crosses_boundary: true
+      sink:
+        type: "any"
+    
+    metadata:
+      severity: "Critical"
+      category: "secret-management"
+      regulatory_citation:
+        - "OWASP A04:2021"
+        - "SOC 2 CC6.1"
+      fix_suggestion: "Retrieve secrets from vault service"
