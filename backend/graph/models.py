@@ -20,7 +20,6 @@ class NodeType(str, Enum):
     FUNCTION = "function"
     FILE = "file"
     MODULE = "module"
-    # Add more if needed (e.g., "class", "method")
 
 
 class NodeRole(str, Enum):

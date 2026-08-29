@@ -1,7 +1,17 @@
+"""
+Policy evaluation engine for analyzing data flow paths in a compliance taint graph.
+
+This module provides the rules engine used to detect security and compliance
+violations across a data flow graph (NetworkX). It evaluates specific paths
+for policy breaches such as PII logging violations, cross-zone data leakage,
+and secret exposure through implicit channels based on configurable YAML rules.
+"""
+
 import yaml
 import os
 import networkx as nx
 from typing import List, Set, Dict, Optional
+
 
 class PolicyEvaluator:
     def __init__(self, rules_path: str = "policies/rules.yaml"):
@@ -14,7 +24,14 @@ class PolicyEvaluator:
             data = yaml.safe_load(f)
             return data.get("rules", [])
 
-    def check_rules(self, path: List[str], tags: Set[str], origin_zone: str, sink_node: str, graph: nx.DiGraph) -> Optional[Dict]:
+    def check_rules(
+        self,
+        path: List[str],
+        tags: Set[str],
+        origin_zone: str,
+        sink_node: str,
+        graph: nx.DiGraph,
+    ) -> Optional[Dict]:
         sink_data = graph.nodes[sink_node]
         sink_tags = set(sink_data.get("tags", []))
         sink_zone = sink_data.get("zone", "public")
@@ -33,7 +50,7 @@ class PolicyEvaluator:
                         "rule_id": rule_id,
                         "severity": metadata.get("severity", "High"),
                         "message": rule.get("description"),
-                        "path": path
+                        "path": path,
                     }
 
             # RULE_002: Cross-Zone Data Leakage
@@ -45,7 +62,7 @@ class PolicyEvaluator:
                         "rule_id": rule_id,
                         "severity": metadata.get("severity", "Critical"),
                         "message": rule.get("description"),
-                        "path": path
+                        "path": path,
                     }
 
             # RULE_003: Secret Exposure via Implicit Channels
@@ -53,15 +70,16 @@ class PolicyEvaluator:
                 source_tag = pattern.get("source", {}).get("value")
                 if source_tag in tags:
                     has_implicit = any(
-                        graph.get_edge_data(path[i], path[i+1]).get("edge_type") == "implicit"
-                        for i in range(len(path)-1)
+                        graph.get_edge_data(path[i], path[i + 1]).get("edge_type")
+                        == "implicit"
+                        for i in range(len(path) - 1)
                     )
                     if has_implicit:
                         return {
                             "rule_id": rule_id,
                             "severity": metadata.get("severity", "Critical"),
                             "message": rule.get("description"),
-                            "path": path
+                            "path": path,
                         }
 
         return None

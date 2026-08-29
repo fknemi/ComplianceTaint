@@ -1,3 +1,14 @@
+"""
+Latent Graph API Client Wrapper.
+
+This module provides functional wrappers for interacting with the Latent Graph API
+(https://lgraph.dev). It exposes two main categories of operations:
+1. Code exploration and analysis (MCP-style endpoints) such as finding symbols,
+   retrieving file structures, dependency mapping, and call chains.
+2. Historical state queries to fetch specific knowledge collections (e.g., call graphs,
+   coupling scores, documentation, PR insights) for a project at a specific Git commit.
+"""
+
 from typing import Literal, Union, Dict, Any, Optional
 from api.client import APIClient
 
