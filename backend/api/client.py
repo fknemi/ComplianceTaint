@@ -49,9 +49,12 @@ class APIClient:
 
         retry_strategy = Retry(
             total=max_retries,
-            backoff_factor=1,  # 1s, 2s, 4s...
+            connect=5,
+            read=5,
+            backoff_factor=2,  # 1s, 2s, 4s...
             status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["HEAD", "GET", "PUT", "DELETE", "OPTIONS"],
+            allowed_methods=["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "POST"],
+            respect_retry_after_header=True,
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("http://", adapter)

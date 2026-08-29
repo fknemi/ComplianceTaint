@@ -76,6 +76,9 @@ class GraphBuilder:
                    is fetched first; falls back to per-file dependencies
                    only when the commit-level fetch fails with a
                    recoverable error.
+        api_key:   Optional API key for Latent Graph authentication.
+                   If None, the underlying MCP client will attempt to
+                   load it from the environment.
     """
 
     def __init__(
@@ -83,10 +86,12 @@ class GraphBuilder:
         project_id: str,
         branch: str = "main",
         commit_id: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> None:
         self.project_id = project_id
         self.branch = branch
         self.commit_id = commit_id
+        self.api_key = api_key
         self.graph: nx.DiGraph = nx.DiGraph()
 
     @staticmethod
@@ -94,9 +99,10 @@ class GraphBuilder:
         project_id: str,
         branch: str = "main",
         commit_id: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> "GraphBuilder":
         """Factory method — prefer this over direct instantiation."""
-        return GraphBuilder(project_id, branch, commit_id)
+        return GraphBuilder(project_id, branch, commit_id, api_key)
 
     # ------------------------------------------------------------------
     # Public interface
@@ -152,7 +158,7 @@ class GraphBuilder:
     def _build_from_call_graph_state(self, commit_id: str) -> None:
         """Fetch the complete call graph at commit_id and populate the graph."""
         logger.info("Fetching full call-graph state for commit %s", commit_id)
-        data = get_call_graph_state(self.project_id, commit_id)
+        data = get_call_graph_state(self.project_id, commit_id, api_key=self.api_key)
 
         if not isinstance(data, dict):
             raise ValueError(
@@ -266,7 +272,9 @@ class GraphBuilder:
 
         with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as pool:
             future_to_path = {
-                pool.submit(get_dependencies, self.project_id, path, self.branch): path
+                pool.submit(
+                    get_dependencies, self.project_id, path, self.branch, self.api_key
+                ): path
                 for path in file_paths
             }
             for future in as_completed(future_to_path):
@@ -285,7 +293,7 @@ class GraphBuilder:
         list_files returns an empty result.
         """
         try:
-            raw = list_files(self.project_id, self.branch)
+            raw = list_files(self.project_id, self.branch, api_key=self.api_key)
             if isinstance(raw, dict):
                 paths = _to_str_list(raw.get("files", []))
             else:
@@ -299,7 +307,7 @@ class GraphBuilder:
 
         logger.info("list_files returned nothing — trying list_modules.")
         try:
-            raw = list_modules(self.project_id, self.branch)
+            raw = list_modules(self.project_id, self.branch, api_key=self.api_key)
             if isinstance(raw, dict):
                 return _to_str_list(raw.get("modules", []))
             return _to_str_list(raw)
@@ -309,7 +317,9 @@ class GraphBuilder:
 
     def _inject_broker_edges(self) -> None:
         file_paths = self._resolve_file_paths()
-        edges = derive_implicit_edges(self.project_id, self.branch, file_paths)
+        edges = derive_implicit_edges(
+            self.project_id, self.branch, file_paths, api_key=self.api_key
+        )
 
         for edge in edges:
             src_file = edge["src_file"]

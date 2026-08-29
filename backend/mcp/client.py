@@ -19,6 +19,7 @@ def find_symbol(
     kind: str = "function",
     limit: int = 20,
     branch: str = "main",
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Find symbols in the project from Latent Graph API.
@@ -33,7 +34,7 @@ def find_symbol(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         payload = {
@@ -55,7 +56,7 @@ def find_symbol(
 
 
 def get_file(
-    project_id: str, path: str, branch: str = "main"
+    project_id: str, path: str, branch: str = "main", api_key: Optional[str] = None
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get file information from Latent Graph API.
@@ -68,7 +69,7 @@ def get_file(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         payload = {"project_id": project_id, "branch": branch, "path": path}
@@ -84,7 +85,7 @@ def get_file(
 
 
 def list_files(
-    project_id: str, branch: str = "main"
+    project_id: str, branch: str = "main", api_key: Optional[str] = None
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get a list of files from Latent Graph API.
@@ -96,7 +97,7 @@ def list_files(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         response = client.get(
@@ -111,7 +112,7 @@ def list_files(
 
 
 def list_modules(
-    project_id: str, branch: str = "main"
+    project_id: str, branch: str = "main", api_key: Optional[str] = None
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get a list of modules from Latent Graph API.
@@ -123,7 +124,7 @@ def list_modules(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         response = client.get(
@@ -138,7 +139,7 @@ def list_modules(
 
 
 def get_dependencies(
-    project_id: str, path: str, branch: str = "main"
+    project_id: str, path: str, branch: str = "main", api_key: Optional[str] = None
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get dependencies for a file from Latent Graph API.
@@ -151,7 +152,7 @@ def get_dependencies(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         payload = {"project_id": project_id, "branch": branch, "path": path}
@@ -172,6 +173,7 @@ def get_call_chain(
     direction: Literal["both", "callers", "callees"] = "both",
     depth: Literal[1, 2, 3, 4, 5] = 5,
     branch: str = "main",
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get call chain from Latent Graph API.
@@ -186,7 +188,7 @@ def get_call_chain(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         payload = {
@@ -208,7 +210,10 @@ def get_call_chain(
 
 
 def get_drg_graph_state(
-    project_id: str, commit_id: str, entity_id: Optional[str] = None
+    project_id: str,
+    commit_id: str,
+    entity_id: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get drg_graph state for a specific commit from Latent Graph API.
@@ -221,7 +226,7 @@ def get_drg_graph_state(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         params = {"collection": "drg_graph"}
@@ -240,7 +245,10 @@ def get_drg_graph_state(
 
 
 def get_codewiki_docs_state(
-    project_id: str, commit_id: str, entity_id: Optional[str] = None
+    project_id: str,
+    commit_id: str,
+    entity_id: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get codewiki_docs state for a specific commit from Latent Graph API.
@@ -253,7 +261,7 @@ def get_codewiki_docs_state(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         params = {"collection": "codewiki_docs"}
@@ -272,7 +280,10 @@ def get_codewiki_docs_state(
 
 
 def get_call_graph_state(
-    project_id: str, commit_id: str, entity_id: Optional[str] = None
+    project_id: str,
+    commit_id: str,
+    entity_id: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get call_graph state for a specific commit from Latent Graph API.
@@ -285,7 +296,7 @@ def get_call_graph_state(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         params = {"collection": "call_graph"}
@@ -304,7 +315,10 @@ def get_call_graph_state(
 
 
 def get_coupling_scores_state(
-    project_id: str, commit_id: str, entity_id: Optional[str] = None
+    project_id: str,
+    commit_id: str,
+    entity_id: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get coupling_scores state for a specific commit from Latent Graph API.
@@ -317,7 +331,7 @@ def get_coupling_scores_state(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         params = {"collection": "coupling_scores"}
@@ -336,7 +350,10 @@ def get_coupling_scores_state(
 
 
 def get_pr_insights_state(
-    project_id: str, commit_id: str, entity_id: Optional[str] = None
+    project_id: str,
+    commit_id: str,
+    entity_id: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get pr_insights state for a specific commit from Latent Graph API.
@@ -349,7 +366,7 @@ def get_pr_insights_state(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         params = {"collection": "pr_insights"}
@@ -368,7 +385,10 @@ def get_pr_insights_state(
 
 
 def get_dep_raw_extraction_state(
-    project_id: str, commit_id: str, entity_id: Optional[str] = None
+    project_id: str,
+    commit_id: str,
+    entity_id: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get dep_raw_extraction state for a specific commit from Latent Graph API.
@@ -381,7 +401,7 @@ def get_dep_raw_extraction_state(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         params = {"collection": "dep_raw_extraction"}
@@ -400,7 +420,10 @@ def get_dep_raw_extraction_state(
 
 
 def get_file_index_snapshots_state(
-    project_id: str, commit_id: str, entity_id: Optional[str] = None
+    project_id: str,
+    commit_id: str,
+    entity_id: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Union[Dict[str, Any], str, None]:
     """
     Get file_index_snapshots state for a specific commit from Latent Graph API.
@@ -413,7 +436,7 @@ def get_file_index_snapshots_state(
     Returns:
         Response data or raises exception on error
     """
-    client = APIClient(base_url="https://lgraph.dev")
+    client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
         params = {"collection": "file_index_snapshots"}

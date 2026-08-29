@@ -58,9 +58,14 @@ _CONSUME_PATTERNS: List[str] = [
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _get_file_summary(project_id: str, path: str, branch: str) -> str:
+def _get_file_summary(
+    project_id: str,
+    path: str,
+    branch: str,
+    api_key: Optional[str] = None,
+) -> str:
     try:
-        result = get_file(project_id, path, branch)
+        result = get_file(project_id, path, branch, api_key=api_key)
         if isinstance(result, dict):
             return result.get("summary", "")
     except Exception as exc:
@@ -91,7 +96,9 @@ def _resolve_flow_type(
 
 
 def _extract_broker_topics_from_configs(
-    project_id: str, branch: str
+    project_id: str,
+    branch: str,
+    api_key: Optional[str] = None,
 ) -> Tuple[Set[str], Set[str]]:
     """
     Read kafka.config.js and redis.config.js summaries to extract
@@ -100,11 +107,15 @@ def _extract_broker_topics_from_configs(
     kafka_topics: Set[str] = set()
     redis_channels: Set[str] = set()
 
-    kafka_summary = _get_file_summary(project_id, "config/kafka.config.js", branch)
+    kafka_summary = _get_file_summary(
+        project_id, "config/kafka.config.js", branch, api_key
+    )
     for match in re.finditer(r"`([\w]+\.[\w.]+)`", kafka_summary):
         kafka_topics.add(match.group(1))
 
-    redis_summary = _get_file_summary(project_id, "config/redis.config.js", branch)
+    redis_summary = _get_file_summary(
+        project_id, "config/redis.config.js", branch, api_key
+    )
     for match in re.finditer(r"`([\w]+\.[\w.]+)`", redis_summary):
         redis_channels.add(match.group(1))
 
@@ -122,6 +133,7 @@ def derive_implicit_edges(
     project_id: str,
     branch: str,
     file_paths: List[str],
+    api_key: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
     Scan each service file's get_file() summary for publish/subscribe
@@ -137,7 +149,7 @@ def derive_implicit_edges(
         }
     """
     kafka_topics, redis_channels = _extract_broker_topics_from_configs(
-        project_id, branch
+        project_id, branch, api_key
     )
 
     # Skip config files, test files, shared infrastructure
@@ -153,7 +165,7 @@ def derive_implicit_edges(
     subscribers: Dict[str, List[Tuple[str, str]]] = {}
 
     for file_path in service_files:
-        summary = _get_file_summary(project_id, file_path, branch)
+        summary = _get_file_summary(project_id, file_path, branch, api_key)
         if not summary:
             continue
 
