@@ -3,6 +3,23 @@ import { useSidebarStore } from "@/stores/useSidebarStore";
 import { useRunAudit } from "@/api/audit";
 import { Link } from "react-router";
 
+import { useGraphStore } from "@/stores/useGraphStore"; // <-- IMPORT THIS
+// <button
+//           onClick={onToggleSequence}
+//           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors shadow-sm flex items-center gap-1.5 ${
+//             sequenceRunning
+//               ? "border-stone-900 bg-stone-900 text-white"
+//               : "border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-800"
+//           }`}
+//         >
+//           <span
+//             className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sequenceRunning ? "bg-white animate-pulse" : "bg-stone-300"}`}
+//           />
+//           {sequenceRunning ? "Animating…" : "Animate all"}
+//         </button>
+//
+//
+
 const settingsInputs = [
   {
     icon: (
@@ -126,13 +143,13 @@ interface LeftSidebarProps {
 export default function LeftSidebar({ onOpenModal }: LeftSidebarProps) {
   const { toggleLeftCollapse } = useSidebarStore();
   const settings = useSettingsStore();
-
+  const { sequenceRunning, triggerAnimate } = useGraphStore();
   const settingsProgress = 100;
   const toolsProgress = 100;
   const { mutate: runAudit, isPending } = useRunAudit({
     onSuccess: (data) => {
       console.log("Audit complete", data);
-      // later: pass data somewhere via a store or callback
+      triggerAnimate();
     },
     onError: (error) => {
       console.error("Audit failed", error);

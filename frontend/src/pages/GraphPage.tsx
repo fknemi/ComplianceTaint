@@ -1,11 +1,12 @@
 import GraphView from "@/components/graph/GraphView";
+
 import { useGraphStore } from "@/stores/useGraphStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useGraph } from "@/api/graph";
 import type { Violation } from "@/types/graph"; // move to @/types/violation if you split it out
 
 export default function GraphPage() {
-  const { elements, setElements } = useGraphStore();
+  const { elements = [], setElements } = useGraphStore();
   const { projectId, branch, commitId, apiKey } = useSettingsStore();
 
   const { refetch, isFetching, isError, error } = useGraph(

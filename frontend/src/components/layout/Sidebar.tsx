@@ -61,36 +61,6 @@ export default function SidebarLayout({ leftSidebar, rightSidebar, children }) {
 
       {/* Main Content Area */}
       <div className="flex-1 p-8 bg-white overflow-y-auto">{children}</div>
-
-      {/* Right Sidebar */}
-      {!isRightHidden && (
-        <div
-          className={`flex flex-col   transition-[width] duration-300 ease-in-out ${
-            isRightCollapsed ? "w-12" : "w-64"
-          }`}
-        >
-          <button
-            onClick={toggleRightCollapse}
-            className="w-full py-4 cursor-pointer border-b font-bold whitespace-nowrap"
-          >
-            {isRightCollapsed ? "◀" : "Collapse ▶"}
-          </button>
-
-          <div className="flex-1 flex w-full overflow-hidden">
-            {isRightCollapsed ? (
-              <div className="w-full flex justify-center items-center">
-                <span className="[writing-mode:vertical-rl] whitespace-nowrap tracking-widest font-semibold ">
-                  Collapsed Right
-                </span>
-              </div>
-            ) : (
-              <div className="w-full h-full p-4 overflow-y-auto">
-                {rightSidebar}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
