@@ -11,13 +11,15 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",
-    "@types/cytoscape": "^3.21.9",
+    "@types/cytoscape": "^3.31.0",
     "cytoscape": "^3.34.2",
+    "d3": "^7.9.0",
     "immer": "^11.1.18",
     "lucide-react": "^1.35.0",
     "react": "^19.2.8",
     "react-cytoscapejs": "^2.0.0",
     "react-dom": "^19.2.8",
+    "react-router": "^8.3.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

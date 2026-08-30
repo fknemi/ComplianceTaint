@@ -1,56 +1,55 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface SettingsState {
   apiKey: string;
   projectId: string;
   branch: string;
   commitId: string;
-
-  // Actions
+  isSettingsOpen: boolean;
+  isToolsOpen: boolean;
   setApiKey: (apiKey: string) => void;
   setProjectId: (projectId: string) => void;
   setBranch: (branch: string) => void;
   setCommitId: (commitId: string) => void;
-
-  // Optional: A helper to update multiple fields at once
-  updateSettings: (
-    settings: Partial<
-      Omit<
-        SettingsState,
-        | "setApiKey"
-        | "setProjectId"
-        | "setBranch"
-        | "setCommitId"
-        | "updateSettings"
-      >
-    >,
-  ) => void;
-
-  // Optional: Reset to defaults
+  updateSettings: (settings: Partial<SettingsState>) => void;
   reset: () => void;
+  toggleSettingsOpen: () => void;
+  toggleToolsOpen: () => void;
 }
 
 const initialState = {
   apiKey: "",
   projectId: "",
-  branch: "main", // default value
+  branch: "main",
   commitId: "",
-};
-
-export const useSettingsStore = create<SettingsState>((set) => ({
-  ...initialState,
-
-  setApiKey: (apiKey) => set({ apiKey }),
-  setProjectId: (projectId) => set({ projectId }),
-  setBranch: (branch) => set({ branch }),
-  setCommitId: (commitId) => set({ commitId }),
-
-  updateSettings: (settings) => set((state) => ({ ...state, ...settings })),
-
-  reset: () => set(initialState),
   isSettingsOpen: true,
   isToolsOpen: true,
-  toggleSettingsOpen: () =>
-    set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
-  toggleToolsOpen: () => set((state) => ({ isToolsOpen: !state.isToolsOpen })),
-}));
+};
+
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setApiKey: (apiKey) => set({ apiKey }),
+      setProjectId: (projectId) => set({ projectId }),
+      setBranch: (branch) => set({ branch }),
+      setCommitId: (commitId) => set({ commitId }),
+      updateSettings: (settings) => set((state) => ({ ...state, ...settings })),
+      reset: () => set(initialState),
+      toggleSettingsOpen: () =>
+        set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
+      toggleToolsOpen: () =>
+        set((state) => ({ isToolsOpen: !state.isToolsOpen })),
+    }),
+    {
+      name: "settings-storage",
+      partialize: (state) => ({
+        apiKey: state.apiKey,
+        projectId: state.projectId,
+        branch: state.branch,
+        commitId: state.commitId,
+      }),
+    },
+  ),
+);
