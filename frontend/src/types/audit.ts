@@ -2,7 +2,7 @@ export interface AuditRequest {
   projectId: string;
   apiKey?: string;
   branch?: string;
-  commitId?: string | null;
+  commitId: string | null;
 }
 
 export interface ViolationResponse {

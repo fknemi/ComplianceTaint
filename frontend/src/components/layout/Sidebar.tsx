@@ -1,7 +1,6 @@
 import { useSidebarStore } from "@/stores/useSidebarStore";
 
 export default function SidebarLayout({ leftSidebar, rightSidebar, children }) {
-  // Consume the store
   const {
     isLeftCollapsed,
     isRightCollapsed,
@@ -13,53 +12,52 @@ export default function SidebarLayout({ leftSidebar, rightSidebar, children }) {
 
   return (
     <div className="flex h-screen w-full font-sans bg-white text-gray-800 overflow-hidden">
-      {/* Left Sidebar */}
       {!isLeftHidden && (
         <div
-          className={`flex flex-col transition-[width] duration-300 ease-in-out  border-2 border-green-500 ${
+          className={`relative flex-shrink-0 transition-all duration-300 ease-in-out border-2 overflow-hidden bg-white ${
             isLeftCollapsed
-              ? "w-12 h-fit py-4 mt-10  border-[#B9B9B9] border-2  rounded-tr-lg rounded-br-lg"
-              : "w-fit my-10"
+              ? "w-12 h-[140px] mt-10 border-[#B9B9B9] rounded-tr-lg rounded-br-lg"
+              : "w-96 h-[calc(100vh-5rem)] my-10 border-transparent"
           }`}
         >
-          <button
+          {/* Collapsed State */}
+          <div
             onClick={toggleLeftCollapse}
-            className={`w-fit border py-4 flex items-center justify-center cursor-pointer font-bold whitespace-nowrap ${toggleLeftCollapse ? "hidden" : ""}`}
+            className={`absolute inset-0 flex flex-col justify-center items-center cursor-pointer transition-all duration-300 ease-in-out ${
+              isLeftCollapsed
+                ? "opacity-100 z-10 delay-100"
+                : "opacity-0 -translate-x-8 pointer-events-none"
+            }`}
           >
-            {isLeftCollapsed ? (
-              <svg
-                width="24px"
-                height="24px"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                color="#000000"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M12 1.25C17.9371 1.25 22.75 6.06294 22.75 12C22.75 17.9371 17.9371 22.75 12 22.75C6.06294 22.75 1.25 17.9371 1.25 12C1.25 6.06294 6.06294 1.25 12 1.25ZM11.5303 7.96967C11.2374 7.67678 10.7626 7.67678 10.4697 7.96967C10.1768 8.26256 10.1768 8.73744 10.4697 9.03033L13.4393 12L10.4697 14.9697C10.1768 15.2626 10.1768 15.7374 10.4697 16.0303C10.7626 16.3232 11.2374 16.3232 11.5303 16.0303L15.0303 12.5303C15.3232 12.2374 15.3232 11.7626 15.0303 11.4697L11.5303 7.96967Z"
-                  fill="#000000"
-                />
-              </svg>
-            ) : null}
-          </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width={24}
+              height={24}
+              viewBox="0 0 24 24"
+              style={{
+                fill: "rgba(0, 0, 0, 1)",
+              }}
+            >
+              <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm-1.293 15.707-1.414-1.414L13.586 12 9.293 7.707l1.414-1.414L16.414 12l-5.707 5.707z" />
+            </svg>
+            <span className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap tracking-widest font-[800] mt-4">
+              Settings
+            </span>
+          </div>
 
-          <div className="flex-1 border flex h-full w-full overflow-hidden">
-            {isLeftCollapsed ? (
-              <div className="w-full flex justify-center items-center">
-                <span className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap tracking-widest font-[800]">
-                  Settings
-                </span>
-              </div>
-            ) : (
-              <div className="w-full h-full overflow-y-auto">{leftSidebar}</div>
-            )}
+          {/* Expanded State */}
+          <div
+            className={`absolute inset-0 w-fit h-full overflow-y-auto transition-all duration-300 ease-in-out ${
+              isLeftCollapsed
+                ? "opacity-0 translate-x-8 pointer-events-none"
+                : "opacity-100 z-10 delay-100"
+            }`}
+          >
+            {leftSidebar}
           </div>
         </div>
       )}
 
-      {/* Main Content Area */}
       <div className="flex-1 p-8 bg-white overflow-y-auto">{children}</div>
     </div>
   );

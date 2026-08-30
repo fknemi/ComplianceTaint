@@ -16,7 +16,7 @@ import re
 import logging
 from typing import Dict, List, Set, Tuple, Any, Optional
 
-from mcp.client import get_file
+from mcp.client import fetch_file
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def _get_file_summary(
     api_key: Optional[str] = None,
 ) -> str:
     try:
-        result = get_file(project_id, path, branch, api_key=api_key)
+        result = fetch_file(project_id, path, branch, api_key=api_key)
         if isinstance(result, dict):
             return result.get("summary", "")
     except Exception as exc:

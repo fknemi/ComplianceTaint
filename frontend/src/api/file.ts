@@ -1,5 +1,5 @@
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
-import { CommitIdRequest, CommitIdResponse } from "@/types/commit_id";
+import { FileContentRequest, FileContentResponse } from "@/types/mcp";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -7,10 +7,10 @@ if (!API_BASE_URL) {
   throw new Error("VITE_API_BASE_URL is not set. Add it to your .env file.");
 }
 
-async function fetchCommitId(
-  payload: CommitIdRequest,
-): Promise<CommitIdResponse> {
-  const response = await fetch(`${API_BASE_URL}/commit_id`, {
+async function fetchFileContent(
+  payload: FileContentRequest,
+): Promise<FileContentResponse> {
+  const response = await fetch(`${API_BASE_URL}/file`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -27,20 +27,22 @@ async function fetchCommitId(
       const errorBody = await response.json();
       detail = errorBody?.detail ?? detail;
     } catch {}
-    throw new Error(`Commit ID request failed (${response.status}): ${detail}`);
+    throw new Error(
+      `File content request failed (${response.status}): ${detail}`,
+    );
   }
 
-  return (await response.json()) as CommitIdResponse;
+  return (await response.json()) as FileContentResponse;
 }
 
-export function useCommitId(
-  options?: Omit
-    UseMutationOptions<CommitIdResponse, Error, CommitIdRequest>,
+export function useFileContent(
+  options?: Omit<
+    UseMutationOptions<FileContentResponse, Error, FileContentRequest>,
     "mutationFn"
   >,
 ) {
-  return useMutation<CommitIdResponse, Error, CommitIdRequest>({
-    mutationFn: fetchCommitId,
+  return useMutation<FileContentResponse, Error, FileContentRequest>({
+    mutationFn: fetchFileContent,
     ...options,
   });
 }

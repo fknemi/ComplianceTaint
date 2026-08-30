@@ -1,25 +1,12 @@
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useEffect, useState } from "react";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 import { useRunAudit } from "@/api/audit";
 import { Link } from "react-router";
-
+import { useAuditStore } from "@/stores/useAuditStore"; // <-- Import the new store
 import { useGraphStore } from "@/stores/useGraphStore"; // <-- IMPORT THIS
-// <button
-//           onClick={onToggleSequence}
-//           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors shadow-sm flex items-center gap-1.5 ${
-//             sequenceRunning
-//               ? "border-stone-900 bg-stone-900 text-white"
-//               : "border-stone-200 bg-white text-stone-500 hover:bg-stone-50 hover:text-stone-800"
-//           }`}
-//         >
-//           <span
-//             className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sequenceRunning ? "bg-white animate-pulse" : "bg-stone-300"}`}
-//           />
-//           {sequenceRunning ? "Animating…" : "Animate all"}
-//         </button>
-//
-//
-
+import { useCommitId } from "@/api/commitId";
+import { useGraph } from "@/api/graph"; // <-- Import useGraph
 const settingsInputs = [
   {
     icon: (
@@ -38,6 +25,7 @@ const settingsInputs = [
     ),
     key: "apiKey",
     placeholder: "Your API Key",
+    required: false,
   },
   {
     icon: (
@@ -55,7 +43,8 @@ const settingsInputs = [
       </svg>
     ),
     key: "projectId",
-    placeholder: "Your Project Id",
+    placeholder: "Your Project Id (Required)",
+    required: true,
   },
   {
     icon: (
@@ -74,6 +63,7 @@ const settingsInputs = [
     ),
     key: "branch",
     placeholder: "Your Git Branch",
+    required: false,
   },
   {
     icon: (
@@ -91,7 +81,8 @@ const settingsInputs = [
       </svg>
     ),
     key: "commitId",
-    placeholder: "Your Commit Id",
+    placeholder: "Your Commit Id (Required)",
+    required: true,
   },
 ];
 
@@ -144,12 +135,36 @@ export default function LeftSidebar({ onOpenModal }: LeftSidebarProps) {
   const { toggleLeftCollapse } = useSidebarStore();
   const settings = useSettingsStore();
   const { sequenceRunning, triggerAnimate } = useGraphStore();
-  const settingsProgress = 100;
-  const toolsProgress = 100;
+  const { violations, setViolations } = useAuditStore();
+  const [settingsProgress, setSettingsProgress] = useState(0);
+  const [toolsProgress, setToolsProgress] = useState(0);
+  const { elements = [], setElements } = useGraphStore();
+  const { refetch } = useGraph(
+    {
+      projectId: settings.projectId,
+      branch: settings.branch,
+      commitId: settings.commitId,
+      apiKey: settings.apiKey,
+    },
+    { enabled: false },
+  );
   const { mutate: runAudit, isPending } = useRunAudit({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log("Audit complete", data);
-      triggerAnimate();
+      if (data?.violations) {
+        setViolations(data.violations);
+      }
+      if (elements.length === 0) {
+        const result = await refetch();
+        if (result.data?.elements) {
+          setElements(result.data.elements);
+        }
+        setTimeout(() => {
+          triggerAnimate();
+        }, 150);
+      } else {
+        triggerAnimate();
+      }
     },
     onError: (error) => {
       console.error("Audit failed", error);
@@ -157,6 +172,9 @@ export default function LeftSidebar({ onOpenModal }: LeftSidebarProps) {
   });
 
   const handleRunAudit = () => {
+    if (!settings.commitId || !settings.projectId) {
+      return;
+    }
     runAudit({
       projectId: settings.projectId,
       apiKey: settings.apiKey,
@@ -164,6 +182,7 @@ export default function LeftSidebar({ onOpenModal }: LeftSidebarProps) {
       commitId: settings.commitId,
     });
   };
+
   return (
     <>
       {/* Collapse toggle */}
@@ -255,42 +274,46 @@ export default function LeftSidebar({ onOpenModal }: LeftSidebarProps) {
                 />
               </div>
 
-              {settingsInputs.map(({ key, placeholder, icon }) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-start relative w-full"
-                >
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
-                    <svg
-                      width={12}
-                      height={12}
-                      viewBox="0 0 9 5"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M8.64864 4.03506C7.96922 4.03506 0.134657 5.41993 0.513237 0.0350647"
-                        stroke="#B9B9B9"
-                        strokeOpacity="0.5"
+              {settingsInputs.map(({ key, placeholder, icon, required }) => {
+                return (
+                  <div
+                    key={key}
+                    className="flex items-center justify-start relative w-full"
+                  >
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
+                      <svg
+                        width={12}
+                        height={12}
+                        viewBox="0 0 9 5"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M8.64864 4.03506C7.96922 4.03506 0.134657 5.41993 0.513237 0.0350647"
+                          stroke="#B9B9B9"
+                          strokeOpacity="0.5"
+                        />
+                      </svg>
+                    </span>
+                    <div className="border-[#B9B9B9]/50 border-2 w-fit h-fit p-4 gap-4 font-regular text-lg flex items-center justify-start rounded-lg ml-6 bg-white relative z-10">
+                      <span>{icon}</span>
+
+                      <input
+                        className="outline-none border-none bg-transparent w-full"
+                        value={settings[key] || ""}
+                        type="text"
+                        placeholder={placeholder}
+                        required={required}
+                        onChange={(e) =>
+                          settings[
+                            `set${key.charAt(0).toUpperCase() + key.slice(1)}`
+                          ](e.target.value)
+                        }
                       />
-                    </svg>
-                  </span>
-                  <div className="border-[#B9B9B9]/50 border-2 w-fit h-fit p-4 gap-4 font-regular text-lg flex items-center justify-start rounded-lg ml-6 bg-white relative z-10">
-                    <span>{icon}</span>
-                    <input
-                      className="outline-none border-none bg-transparent"
-                      value={settings[key] || ""}
-                      type="text"
-                      placeholder={placeholder}
-                      onChange={(e) =>
-                        settings[
-                          `set${key.charAt(0).toUpperCase() + key.slice(1)}`
-                        ](e.target.value)
-                      }
-                    />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -303,25 +326,39 @@ export default function LeftSidebar({ onOpenModal }: LeftSidebarProps) {
 
       <div className="flex items-center justify-start w-full pl-4">
         <button
-          className="border-[#B9B9B9]/50 border-2 w-full h-fit p-4 gap-4 flex items-center justify-start rounded-lg ml-11 bg-white relative z-10"
+          className="border-[#B9B9B9]/50 border-2 w-full h-fit flex items-center justify-start rounded-lg ml-11 bg-white relative z-10 overflow-hidden isolate"
           onClick={handleRunAudit}
           disabled={isPending}
         >
-          <span>
-            <svg
-              width={18}
-              height={18}
-              viewBox="0 0 18 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9 0C4.1211 0 0 4.122 0 9C0 13.878 4.1211 18 9 18C13.8789 18 18 13.878 18 9C18 4.122 13.8789 0 9 0ZM9 16.2C5.0967 16.2 1.8 12.9024 1.8 9C1.8 5.4018 4.6035 2.3247 8.1 1.8657V3.681C5.5503 4.1121 3.6 6.3297 3.6 9C3.6 11.9781 6.0219 14.4 9 14.4C10.4355 14.4 11.79 13.8366 12.8133 12.8133L11.5407 11.5398C11.2084 11.8758 10.8127 12.1424 10.3766 12.3244C9.94045 12.5064 9.47256 12.6001 9 12.6C7.0146 12.6 5.4 10.9854 5.4 9C5.4 7.3278 6.5511 5.9301 8.1 5.5278V7.4592C7.569 7.7769 7.2 8.3529 7.2 9C7.2 9.9729 8.0271 10.8 9 10.8C9.9729 10.8 10.8 9.9729 10.8 9C10.8 8.3529 10.431 7.7769 9.9 7.4592V1.8657C13.3965 2.3247 16.2 5.4018 16.2 9C16.2 12.9024 12.9033 16.2 9 16.2Z"
-                fill="#111111"
-              />
-            </svg>
-          </span>
-          <p className="font-regular text-lg">Run Audit</p>
+          {/* 
+    The expanding dark background layer.
+    Uses a slow transition (e.g., 10 seconds) to fake a progress bar while pending. 
+  */}
+          <div
+            className={`absolute left-0 top-0 h-full bg-[#111111] transition-all ease-out ${
+              isPending ? "w-full duration-[10000ms]" : "w-0 duration-300"
+            }`}
+          />
+
+          <div className="relative z-10 w-full p-4 flex items-center gap-4 mix-blend-difference text-white pointer-events-none">
+            <span className={isPending ? "animate-spin" : ""}>
+              <svg
+                width={18}
+                height={18}
+                viewBox="0 0 18 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9 0C4.1211 0 0 4.122 0 9C0 13.878 4.1211 18 9 18C13.8789 18 18 13.878 18 9C18 4.122 13.8789 0 9 0ZM9 16.2C5.0967 16.2 1.8 12.9024 1.8 9C1.8 5.4018 4.6035 2.3247 8.1 1.8657V3.681C5.5503 4.1121 3.6 6.3297 3.6 9C3.6 11.9781 6.0219 14.4 9 14.4C10.4355 14.4 11.79 13.8366 12.8133 12.8133L11.5407 11.5398C11.2084 11.8758 10.8127 12.1424 10.3766 12.3244C9.94045 12.5064 9.47256 12.6001 9 12.6C7.0146 12.6 5.4 10.9854 5.4 9C5.4 7.3278 6.5511 5.9301 8.1 5.5278V7.4592C7.569 7.7769 7.2 8.3529 7.2 9C7.2 9.9729 8.0271 10.8 9 10.8C9.9729 10.8 10.8 9.9729 10.8 9C10.8 8.3529 10.431 7.7769 9.9 7.4592V1.8657C13.3965 2.3247 16.2 5.4018 16.2 9C16.2 12.9024 12.9033 16.2 9 16.2Z"
+                  fill="currentColor" /* Important: changed from hardcoded hex so it inherits text-white */
+                />
+              </svg>
+            </span>
+            <p className="font-regular text-lg">
+              {isPending ? "Auditing..." : "Run Audit"}
+            </p>
+          </div>
         </button>
       </div>
 

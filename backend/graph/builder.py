@@ -33,7 +33,7 @@ from graph.models import NodeType, EdgeType, DataFlowType
 from mcp.client import (
     get_call_graph_state,
     get_dependencies,
-    list_files,
+    fetch_files,
     list_modules,
 )
 
@@ -293,7 +293,7 @@ class GraphBuilder:
         list_files returns an empty result.
         """
         try:
-            raw = list_files(self.project_id, self.branch, api_key=self.api_key)
+            raw = fetch_files(self.project_id, self.branch, api_key=self.api_key)
             if isinstance(raw, dict):
                 paths = _to_str_list(raw.get("files", []))
             else:

@@ -1,5 +1,5 @@
 # debg.py
-from mcp.client import get_file
+from mcp.client import fetch_file
 import os
 from dotenv import load_dotenv
 load_dotenv()

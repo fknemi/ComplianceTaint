@@ -1,11 +1,15 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from api.helpers import build_and_analyze_graph
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Local in-memory cache to store graph results by (project_id, commit_id)
+GRAPH_CACHE: Dict[Tuple[str, str], "GraphResponse"] = {}
+MAX_CACHE_SIZE = 50
 
 
 class GraphResponse(BaseModel):
@@ -25,6 +29,17 @@ def get_graph(
     """
     if apiKey in (None, "undefined", "null", ""):
         apiKey = None
+
+    # 1. Check the local cache before running the expensive build operation
+    cache_key = None
+    if projectId and commitId:
+        cache_key = (projectId, commitId)
+        if cache_key in GRAPH_CACHE:
+            logger.info(f"Graph cache hit for project {projectId} at commit {commitId}")
+            return GRAPH_CACHE[cache_key]
+
+    logger.info(f"Graph cache miss. Building graph for project {projectId}")
+
     try:
         graph, _ = build_and_analyze_graph(
             project_id=projectId,
@@ -52,4 +67,16 @@ def get_graph(
         edge_data.update(attrs)
         elements.append(edge_data)
 
-    return GraphResponse(elements=elements)
+    response = GraphResponse(elements=elements)
+
+    # 2. Store the result in the cache
+    if cache_key:
+        if len(GRAPH_CACHE) >= MAX_CACHE_SIZE:
+            # Python 3.7+ dicts preserve insertion order.
+            # This pops the oldest entry to make room for the new one.
+            GRAPH_CACHE.pop(next(iter(GRAPH_CACHE)))
+            
+        GRAPH_CACHE[cache_key] = response
+        logger.info(f"Cached graph results for {cache_key}")
+
+    return response

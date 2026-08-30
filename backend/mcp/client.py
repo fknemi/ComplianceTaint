@@ -10,7 +10,7 @@ This module provides functional wrappers for interacting with the Latent Graph A
 """
 
 from typing import Literal, Union, Dict, Any, Optional
-from api.client import APIClient
+from api.client import APIClient, APIError
 
 
 def find_symbol(
@@ -55,7 +55,7 @@ def find_symbol(
         client.close()
 
 
-def get_file(
+def fetch_file(
     project_id: str, path: str, branch: str = "main", api_key: Optional[str] = None
 ) -> Union[Dict[str, Any], str, None]:
     """
@@ -84,7 +84,7 @@ def get_file(
         client.close()
 
 
-def list_files(
+def fetch_files(
     project_id: str, branch: str = "main", api_key: Optional[str] = None
 ) -> Union[Dict[str, Any], str, None]:
     """
@@ -104,7 +104,6 @@ def list_files(
             "/api/v1/mcp/list-files",
             params={"project_id": project_id, "branch": branch},
         )
-
         return response
 
     finally:
@@ -456,15 +455,15 @@ def get_file_index_snapshots_state(
 
 def fetch_commit_id(
     project_id: str,
-    commit_id: str,
+    commit_id: str,  # Receiving "main" based on your previous traceback
     api_key: Optional[str] = None,
 ) -> Optional[str]:
     """
-    Get the commit ID from the state-at endpoint from Latent Graph API.
+    Get the commit ID from the codewiki endpoint from Latent Graph API.
 
     Args:
         project_id: UUID of the project
-        commit_id: Git commit hash (or branch reference)
+        commit_id: Branch name (e.g., "main") or commit hash
         api_key: Optional API key for authentication
 
     Returns:
@@ -473,12 +472,16 @@ def fetch_commit_id(
     client = APIClient(base_url="https://lgraph.dev", api_key=api_key)
 
     try:
-        params = {"collection": "codewiki_docs"}
+        # Pass the branch/commit_id as a query param
+        params = {"branch": commit_id}
 
+        # Updated to use /api/project/ instead of /api/projects/
+        # and /codewiki instead of /state-at/
         response = client.get(
-            f"/api/projects/{project_id}/state-at/{commit_id}",
+            f"/api/project/{project_id}/?collection=codewiki_docs",
             params=params,
         )
+        print(response)
 
         # Extract and return only body.commit_id if the response is a dictionary
         if isinstance(response, dict) and "body" in response:
@@ -486,5 +489,9 @@ def fetch_commit_id(
 
         return None
 
+    except APIError as e:
+        # Catch the error so it doesn't crash the server with a 500
+        print(f"Error fetching commit ID: {e}")
+        return None
     finally:
         client.close()
