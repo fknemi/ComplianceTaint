@@ -1,7 +1,9 @@
-fastapi>=0.115.0
-uvicorn[standard]>=0.32.0
-python-dotenv>=1.0.0
-pydantic>=2.9.0
-networkx>=3.3
-pyyaml>=6.0
-requests>=2.32.0
+fastapi==0.141.1
+networkx==3.6.1
+pydantic==2.13.5
+python-dotenv==1.2.3
+PyYAML==6.0.3
+reportlab==5.0.1
+Requests==2.34.2
+urllib3==2.7.0
+uvicorn==0.52.4
